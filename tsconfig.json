@@ -1,0 +1,23 @@
+{
+	"compilerOptions": {
+		"target": "es5",
+		"module": "commonjs",
+		"declaration": true,
+		"noImplicitAny": true,
+		"removeComments": false,
+		"noImplicitReturns": true,
+		"noImplicitThis": true,
+		"strictNullChecks": true,
+		"experimentalDecorators": true,
+		"lib": [ "es6" ],
+		"jsx": "react",
+		"alwaysStrict": true,
+		"sourceMap": true,
+		"outDir": "api"
+	},
+	"include": [
+		"src/**/*.ts",
+		"src/**/*.tsx"
+	],
+	"exclude": []
+}

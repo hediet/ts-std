@@ -1,0 +1,14 @@
+{
+  "name": "hediet-framework",
+  "version": "1.0.2",
+  "description": "",
+  "scripts": {
+    "prepublish": "rmdir api /S /Q && tsc"
+  },
+  "author": "Henning Dieterichs",
+  "license": "MIT",
+  "dependencies": {
+    "@types/underscore": "^1.7.36",
+    "underscore": "^1.8.3"
+  }
+}
