@@ -1,14 +1,14 @@
 
-export function disposable(dispose: () => void): Disposable {
+export function disposable(dispose: () => void): IDisposable {
 	return { dispose: dispose };
 } 
 
-export interface Disposable {
+export interface IDisposable {
 	dispose(): void;
 }
 
-export function limitLifeTime<T>(callback: (mortals: Disposable[]) => T): T {
-	const mortals: Disposable[] = [];
+export function limitLifeTime<T>(callback: (mortals: IDisposable[]) => T): T {
+	const mortals: IDisposable[] = [];
 	try {
 		const result = callback(mortals);
 		return result;
@@ -18,7 +18,7 @@ export function limitLifeTime<T>(callback: (mortals: Disposable[]) => T): T {
 	}
 }
 
-export function dispose(disposable: Disposable|Disposable[]|undefined) {
+export function dispose(disposable: IDisposable|IDisposable[]|undefined) {
 	if (!disposable) return;
 
 	if (Array.isArray(disposable)) {
