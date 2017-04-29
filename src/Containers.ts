@@ -1,4 +1,3 @@
-
 export class Wrapper {}
 
 export class ResultWrapper<TResult> extends Wrapper {

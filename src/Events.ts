@@ -1,4 +1,4 @@
-import { IDisposable, disposable } from './Disposable';
+import { IDisposable, createDisposable } from './disposable';
 
 /**
  * Event handler function with a generic sender and a generic argument.
@@ -15,14 +15,15 @@ export type SimpleEventHandler<TArgs> = (args: TArgs) => void;
  */
 export type SignalHandler = () => void;
 
+export type SignalSource = ISubscribable<SignalHandler>;
+
 /**
  * Indicates the object implements generic subscriptions. 
  */
 export interface ISubscribable<THandlerType> {
-
 	/** 
 	 * Subscribe to the event.
-	 * @param fn The event handler that is called when the event is dispatched.
+	 * @param fn The event handler that is called when the event is emitted.
 	 */
 	sub(fn: THandlerType): IDisposable;
 
@@ -55,10 +56,10 @@ export interface ISimpleEvent<TArgs> extends ISubscribable<SimpleEventHandler<TA
 export interface ISignal extends ISubscribable<SignalHandler> {}
 
 /**
- * Base class for implementation of the dispatcher. It facilitates the subscribe
+ * Base class for implementation of the emitter. It facilitates the subscribe
  * and unsubscribe methods based on generic handlers. The TEventType specifies
  * the type of event that should be exposed. Use the asEvent to expose the
- * dispatcher as event.
+ * emitter as event.
  */
 /**
  * Stores a handler. Manages execution meta data.
@@ -94,33 +95,33 @@ export abstract class EmitterBase<TEventHandler> implements ISubscribable<TEvent
 	private readonly subscriptions = new Set<Subscription<TEventHandler>>();
 
 	/**
-	 * Subscribe to the event dispatcher.
-	 * @param fn The event handler that is called when the event is dispatched.
+	 * Subscribe to the event emitter.
+	 * @param fn The event handler that is called when the event is emitted.
 	 */
 	public sub(fn: TEventHandler): IDisposable {
 		const sub = new Subscription<TEventHandler>(fn, false);
 		this.subscriptions.add(sub);
-		return disposable(() => this.subscriptions.delete(sub));
+		return createDisposable(() => this.subscriptions.delete(sub));
 	}
 
 	/** 
 	 * Subscribe once to the event with the specified name.
-	 * @param fn The event handler that is called when the event is dispatched.
+	 * @param fn The event handler that is called when the event is emitted.
 	 */
 	public one(fn: TEventHandler): IDisposable {
 		const sub = new Subscription<TEventHandler>(fn, true);
 		this.subscriptions.add(sub);
-		return disposable(() => this.subscriptions.delete(sub));
+		return createDisposable(() => this.subscriptions.delete(sub));
 	}
 
 	/**
-	 * Generic dispatch will dispatch the handlers with the given arguments. 
+	 * Generic emitter will emit the handlers with the given arguments. 
 	 * 
 	 * @protected
 	 * @param {*} The scope the scope of the event.
 	 * @param {IArguments} args The arguments for the event.
 	 */
-	protected _dispatch(scope: any, args: IArguments) {
+	protected _emit(scope: any, args: IArguments) {
 
 		for (const sub of this.subscriptions.values()) {
 			if (sub.isOnce)
@@ -143,11 +144,11 @@ export abstract class EmitterBase<TEventHandler> implements ISubscribable<TEvent
 export class EventEmitter<TSender, TArgs> extends EmitterBase<EventHandler<TSender, TArgs>> implements IEvent<TSender, TArgs>
 {
 	/**
-	 * Dispatches the event.
+	 * Emits the event.
 	 * @param sender The sender.
 	 * @param args The arguments object.
 	 */
-	public dispatch(sender: TSender, args: TArgs) { this._dispatch(this, arguments); }
+	public emit(sender: TSender, args: TArgs) { this._emit(this, arguments); }
 }
 
 /**
@@ -157,10 +158,10 @@ export class EventEmitter<TSender, TArgs> extends EmitterBase<EventHandler<TSend
 export class SimpleEventEmitter<TArgs> extends EmitterBase<SimpleEventHandler<TArgs>> implements ISimpleEvent<TArgs>
 {
 	/**
-	 * Dispatches the event.
+	 * Emits the event.
 	 * @param args The arguments object.
 	 */
-	public dispatch(args: TArgs) { this._dispatch(this, arguments); }
+	public emit(args: TArgs) { this._emit(this, arguments); }
 }
 
 /**
@@ -169,9 +170,9 @@ export class SimpleEventEmitter<TArgs> extends EmitterBase<SimpleEventHandler<TA
  */
 export class SignalEmitter extends EmitterBase<SignalHandler> implements ISignal {
 	/**
-	 * Dispatches the signal.
+	 * Emits the signal.
 	 */
-	public dispatch() { this._dispatch(this, arguments); }
+	public emit() { this._emit(this, arguments); }
 }
 
 /**
@@ -180,23 +181,23 @@ export class SignalEmitter extends EmitterBase<SignalHandler> implements ISignal
  */
 export class EmitterWrapper<TEventHandler> implements ISubscribable<TEventHandler>
 {
-	private readonly __dispatcher: ISubscribable<TEventHandler>;
+	private readonly __emitter: ISubscribable<TEventHandler>;
 
 	/**
 	 * Creates a new EventDispatcherWrapper instance.
 	 * @param dispatcher The dispatcher.
 	 */
-	constructor(dispatcher: ISubscribable<TEventHandler>) { this.__dispatcher = dispatcher; }
+	constructor(emitter: ISubscribable<TEventHandler>) { this.__emitter = emitter; }
 
 	/**
 	 * Subscribe to the event dispatcher.
 	 * @param fn The event handler that is called when the event is dispatched.
 	 */
-	public sub(fn: TEventHandler): IDisposable { return this.__dispatcher.sub(fn); }
+	public sub(fn: TEventHandler): IDisposable { return this.__emitter.sub(fn); }
 
 	/** 
 	 * Subscribe once to the event with the specified name.
 	 * @param fn The event handler that is called when the event is dispatched.
 	 */
-	public one(fn: TEventHandler): IDisposable { return this.__dispatcher.one(fn); }
+	public one(fn: TEventHandler): IDisposable { return this.__emitter.one(fn); }
 }

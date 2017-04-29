@@ -1,4 +1,5 @@
-import { ISubscribable, SignalEmitter, SignalHandler } from './Events';
+import { createDisposable, emptyDisposable, IDisposable } from './disposable';
+import { ISubscribable, SignalEmitter, SignalHandler } from './events';
 
 export class CancellationTokenSource {
 	private isCancelled: boolean = false;
@@ -11,31 +12,46 @@ export class CancellationTokenSource {
 		this.isCancelled = true;
 		this.reason = reason;
 
-		this.onCancel.dispatch();
+		this.onCancel.emit();
 	}
 
-	public readonly token = new CancellationToken(this);
+	public asDisposable(reason?: string) {
+		return createDisposable(() => this.cancel(reason));
+	}
+
+	public readonly token = (new (CancellationToken as any)(this)) as CancellationToken;
 }
 
-export interface CancellableResult<T> {
-	result?: T;
-	cancelled: boolean;
-}
+export type CancellableResult<T> = { cancelled: false; result: T; } | { cancelled: true }
 
 export class CancellationToken {
 	public static empty: CancellationToken; 
-	public onCancel = this.source["onCancel"].asEvent();
+	public onCancel(handler: () => void): IDisposable {
+		if (this.isCancelled) {
+			handler();
+			return emptyDisposable;
+		}
+		else
+			return this.source["onCancel"].one(handler);
+	}
 
-	constructor(private readonly source: CancellationTokenSource) {}
+	private constructor(private readonly source: CancellationTokenSource) {}
 
 	public throwIfCancelled() { if (this.isCancelled) throw new CancellationError(); }
 
 	public get isCancelled() { return this.source["isCancelled"]; }
 
-	public makeCancellable<T>(promise: PromiseLike<T>): PromiseLike<CancellableResult<T>> {
+	public resolveOnCancel<T>(promise: PromiseLike<T>): PromiseLike<CancellableResult<T>> {
 		return new Promise<CancellableResult<T>>((resolve, reject) => {
-			const removeEvent = this.onCancel.one(() => resolve({ cancelled: true }));
-			promise.then(val => { removeEvent.dispose(); resolve({ cancelled: false, result: val }) }, reject);
+			const cancelSub = this.onCancel(() => resolve({ cancelled: true }));
+			promise.then(val => { cancelSub.dispose(); resolve({ cancelled: false, result: val }); }, reject);
+		})
+	}
+
+	public rejectOnCancel<T>(promise: PromiseLike<T>): PromiseLike<T> {
+		return new Promise<T>((resolve, reject) => {
+			const cancelSub = this.onCancel(() => reject(new CancellationError()));
+			promise.then(val => { cancelSub.dispose(); resolve(val); }, reject);
 		})
 	}
 }
@@ -43,4 +59,3 @@ export class CancellationToken {
 export class CancellationError {
 
 }
-

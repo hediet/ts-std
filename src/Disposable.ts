@@ -1,6 +1,8 @@
-
-export function disposable(dispose: () => void): IDisposable {
-	return { dispose: dispose };
+export function createDisposable(disposable?: (() => void) | IDisposable | IDisposable[] | undefined): IDisposable {
+	if (!disposable) return { dispose: () => undefined };
+	if (disposable instanceof Function) return { dispose: disposable };
+	if ("dispose" in disposable) return disposable as IDisposable;
+	else return { dispose: () => dispose(disposable) };
 } 
 
 export interface IDisposable {
@@ -18,7 +20,7 @@ export function limitLifeTime<T>(callback: (mortals: IDisposable[]) => T): T {
 	}
 }
 
-export function dispose(disposable: IDisposable|IDisposable[]|undefined) {
+export function dispose(disposable: IDisposable | IDisposable[] | undefined) {
 	if (!disposable) return;
 
 	if (Array.isArray(disposable)) {
@@ -27,5 +29,19 @@ export function dispose(disposable: IDisposable|IDisposable[]|undefined) {
 	}
 	else {
 		disposable.dispose();
+	}
+}
+
+export const emptyDisposable: IDisposable = { dispose: () => {} };
+
+export abstract class Disposable implements IDisposable {
+	private disposables: IDisposable[] = [];
+	
+	protected addDisposable(disposable: IDisposable) {
+		this.disposables.push(disposable);
+	}
+
+	public dispose() {
+		dispose(this.disposables);
 	}
 }
