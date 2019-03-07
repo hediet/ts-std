@@ -3,15 +3,7 @@
 		"target": "es6",
 		"module": "commonjs",
 		"declaration": true,
-		"noImplicitAny": true,
-		"removeComments": false,
-		"noImplicitReturns": true,
-		"noImplicitThis": true,
-		"strictNullChecks": true,
-		"experimentalDecorators": true,
-		"jsx": "react",
-		"alwaysStrict": true,
-		"sourceMap": true,
+		"strict": true,
 		"outDir": "api"
 	},
 	"include": [

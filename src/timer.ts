@@ -1,47 +1,80 @@
-import { CancellationToken, CancellationTokenSource, CancellationError } from './cancellation';
-import { createDisposable, Disposable, IDisposable } from './disposable';
-import { SignalEmitter, SignalSource } from "./events";
+//import { CancellationToken, CancellationError } from './cancellation';
+import {
+	Disposable,
+	DisposableComponent,
+	DisposableLike,
+	dispose,
+} from "./disposable";
+import { EventEmitter } from "./events";
 
-export function startTimerCallImmediately(intervalMs: number, callback: () => void): IDisposable {
+export function startIntervalCallImmediately(
+	intervalMs: number,
+	callback: () => void
+): Disposable {
 	callback();
 	const handle = setInterval(callback, intervalMs);
-	return createDisposable(() => clearInterval(handle));
+	return Disposable.create(() => clearInterval(handle));
 }
 
-export function startTimer(intervalMs: number, callback: () => void): IDisposable {
+export function startInterval(
+	intervalMs: number,
+	callback: () => void
+): Disposable {
 	const handle = setInterval(callback, intervalMs);
-	return createDisposable(() => clearInterval(handle));
+	return Disposable.create(() => clearInterval(handle));
 }
 
-export function startTimeout(intervalMs: number, callback: () => void): IDisposable {
+export function startTimeout(
+	intervalMs: number,
+	callback: () => void
+): Disposable {
 	const handle = setTimeout(callback, intervalMs);
-	return createDisposable(() => clearTimeout(handle));
+	return Disposable.create(() => clearTimeout(handle));
 }
 
-export class EventTimer extends Disposable {
-	protected emitter: SignalEmitter = new SignalEmitter();
-	public readonly onTick: SignalSource = this.emitter.asEvent();
+export class EventTimer extends DisposableComponent {
+	protected emitter = new EventEmitter();
+	public readonly onTick = this.emitter.asEvent();
 
 	constructor(intervalMs: number) {
 		super();
-		this.addDisposable(startTimer(intervalMs, () => this.emitter.emit()));
+		this.addDisposable(
+			startInterval(intervalMs, () => this.emitter.emit(undefined, this))
+		);
 	}
 }
 
-export function wait(intervalMs: number, cancellationToken: CancellationToken = CancellationToken.empty, rejectOnCancel: boolean = false): Promise<void> {
-	return new Promise<void>((resolve, reject) => {
-		const handle = setTimeout(() => {
-			onCancelSub.dispose();
-			if (!cancellationToken.isCancelled)
-				resolve();
-		}, intervalMs);
-
-		const onCancelSub = cancellationToken.onCancel(() => {
-			clearTimeout(handle);
-			if (rejectOnCancel)
-				reject(new CancellationError());
-			else
-				resolve();
-		});
+export function wait(intervalMs: number): Promise<void> {
+	return new Promise<void>(resolve => {
+		setTimeout(() => resolve(), intervalMs);
 	});
 }
+
+/*
+export function wait(
+	intervalMs: number, cancellationToken?: CancellationToken, rejectOnCancel: boolean = false
+): Promise<void> {
+	return new Promise<void>((resolve, reject) => {
+		let cancelSub: DisposableLike = undefined;
+		const handle = setTimeout(() => {
+			dispose(cancelSub);
+			if (!cancellationToken || !cancellationToken.isCancelled) {
+				resolve();
+			}
+		}, intervalMs);
+
+		
+		if (cancellationToken) {
+			cancelSub = cancellationToken.onCancel(() => {
+				clearTimeout(handle);
+				if (rejectOnCancel) {
+					reject(new CancellationError());
+				} else {
+					resolve();
+				}
+			});
+		}
+		
+	});
+}
+*/

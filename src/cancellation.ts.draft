@@ -1,0 +1,67 @@
+export const none = "none";
+
+/*
+import { Disposable, DisposableComponent } from './disposable';
+import { EventEmitter } from './events';
+
+export class CancellationTokenSource<TReason = void> {
+	public cancel(reason: TReason): void;
+	public cancel(this: CancellationTokenSource<void>): void;
+	public cancel(reason?: TReason) {
+		if (this.token.isCancelled) throw new Error("Token is already cancelled.");
+
+		this.token.isCancelled = true;
+		this.token.reason = reason;
+
+		this.token.onCancel.emit({ reason: reason! }, this);
+	}
+
+	public asDisposable(reason: TReason) {
+		return Disposable.create(() => this.cancel(reason));
+	}
+
+	public readonly token = new CancellationToken();
+}
+
+export type CancellableResult<T> = { cancelled: false; result: T; } | { cancelled: true }
+
+export class CancellationToken<TReason = void> {
+	public static empty = new CancellationToken();
+
+	private _isCancelled: boolean = false;
+	private reason: TReason|undefined;
+	private readonly onCancelEmitter = new EventEmitter<{ reason: TReason }>();
+
+	public onCancel(handler: (reason: TReason) => void): Disposable {
+		if (this.isCancelled) {
+			handler({ reason: this.reason });
+			return emptyDisposable;
+		}
+		else {
+			return this.onCancelEmitter.one(handler);
+		}
+	}
+
+	public throwIfCancelled() { if (this.isCancelled) throw new CancellationError(); }
+
+	public get isCancelled() { return this._isCancelled; }
+
+	public resolveOnCancel<T>(promise: Promise<T>): Promise<CancellableResult<T>> {
+		return new Promise<CancellableResult<T>>((resolve, reject) => {
+			const cancelSub = this.onCancel(() => resolve({ cancelled: true }));
+			promise.then(val => { cancelSub.dispose(); resolve({ cancelled: false, result: val }); }, reject);
+		})
+	}
+
+	public rejectOnCancel<T>(promise: Promise<T>): Promise<T> {
+		return new Promise<T>((resolve, reject) => {
+			const cancelSub = this.onCancel(() => reject(new CancellationError()));
+			promise.then(val => { cancelSub.dispose(); resolve(val); }, reject);
+		})
+	}
+}
+
+export class CancellationError {
+
+}
+*/

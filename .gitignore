@@ -29,7 +29,6 @@ build/Release
 
 # Dependency directories
 node_modules
-!/example/node_modules/
 jspm_packages
 
 # Optional npm cache directory
@@ -40,3 +39,5 @@ jspm_packages
 
 dist
 api
+
+dist/

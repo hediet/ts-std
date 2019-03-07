@@ -1,43 +1,57 @@
-export function createDisposable(disposable?: (() => void) | IDisposable | IDisposable[] | undefined): IDisposable {
-	if (!disposable) return { dispose: () => undefined };
-	if (disposable instanceof Function) return { dispose: disposable };
-	if ("dispose" in disposable) return disposable as IDisposable;
-	else return { dispose: () => dispose(disposable) };
-} 
+export type DisposableLike = Disposable | Disposable[] | undefined;
 
-export interface IDisposable {
+export namespace Disposable {
+	export function create(
+		disposable?: DisposableLike | (() => void)
+	): Disposable {
+		if (!disposable) return empty;
+		if (disposable instanceof Function) return { dispose: disposable };
+		if ("dispose" in disposable) return disposable as Disposable;
+		else return { dispose: () => dispose(disposable) };
+	}
+	export const empty: Disposable = { dispose: () => {} };
+}
+
+export interface Disposable {
 	dispose(): void;
 }
 
-export function limitLifeTime<T>(callback: (mortals: IDisposable[]) => T): T {
-	const mortals: IDisposable[] = [];
+export async function guaranteeDisposeAsync<T>(
+	callback: (items: Disposable[]) => Promise<T>
+): Promise<T> {
+	const items: Disposable[] = [];
 	try {
-		const result = callback(mortals);
+		const result = await callback(items);
 		return result;
-	}
-	finally {
-		dispose(mortals);
+	} finally {
+		dispose(items);
 	}
 }
 
-export function dispose(disposable: IDisposable | IDisposable[] | undefined) {
+export function guaranteeDispose<T>(callback: (items: Disposable[]) => T): T {
+	const items: Disposable[] = [];
+	try {
+		const result = callback(items);
+		return result;
+	} finally {
+		dispose(items);
+	}
+}
+
+export function dispose(disposable: Disposable | Disposable[] | undefined) {
 	if (!disposable) return;
 
 	if (Array.isArray(disposable)) {
-		for (var d of disposable)
-			d.dispose();
-	}
-	else {
+		for (var d of disposable) d.dispose();
+	} else {
 		disposable.dispose();
 	}
 }
 
-export const emptyDisposable: IDisposable = { dispose: () => {} };
+export abstract class DisposableComponent implements Disposable {
+	private disposables: Disposable[] = [];
 
-export abstract class Disposable implements IDisposable {
-	private disposables: IDisposable[] = [];
-	
-	protected addDisposable(disposable: IDisposable) {
+	protected addDisposable(disposable: Disposable) {
 		this.disposables.push(disposable);
 	}
 

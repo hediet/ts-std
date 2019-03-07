@@ -1,15 +1,31 @@
-export class Barrier<T> {
-	public unlock: (value: T) => void;
-	public reject: (reason: string) => void;
+export class Deferred<T> {
+	public readonly setValue: (value: T) => void;
+	public readonly reject: (reason: string) => void;
+	public readonly promise: Promise<T>;
 
-	public readonly onUnlocked: Promise<T> = new Promise((resolve, reject) => { this.unlock = resolve; this.reject = reject; });
+	constructor() {
+		let resolve: (value: T) => void;
+		let reject: (reason: string) => void;
+		this.promise = new Promise((resolve, reject) => {
+			resolve = resolve;
+			reject = reject;
+		});
+		this.setValue = resolve!;
+		this.reject = reject!;
+	}
 }
 
-export class Deferred<T> {
-	public setValue: (value: T) => void;
-	public reject: (reason: string) => void;
+export class Barrier<T> {
+	public readonly unlock: (value: T) => void;
+	public readonly reject: (reason: string) => void;
+	public readonly onUnlocked: Promise<T>;
 
-	public readonly value: Promise<T> = new Promise((resolve, reject) => { this.setValue = resolve; this.reject = reject; });
+	constructor() {
+		const d = new Deferred<T>();
+		this.onUnlocked = d.promise;
+		this.unlock = d.setValue;
+		this.reject = d.reject;
+	}
 }
 
 export class ProducerConsumer<T> {
@@ -25,9 +41,13 @@ export class ProducerConsumer<T> {
 		return b;
 	}
 
-	public produce(value: T) { this.popOrNext().setValue(value); }
+	public produce(value: T) {
+		this.popOrNext().setValue(value);
+	}
 
-	public rejectSingle(reason: string) { this.popOrNext().reject(reason); }
+	public rejectSingle(reason: string) {
+		this.popOrNext().reject(reason);
+	}
 
 	public consume(): Promise<T> {
 		let b = this.nextBarriers.shift();
@@ -35,6 +55,6 @@ export class ProducerConsumer<T> {
 			b = new Deferred<T>();
 			this.barriers.push(b);
 		}
-		return b.value;
+		return b.promise;
 	}
 }
