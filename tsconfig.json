@@ -4,11 +4,10 @@
 		"module": "commonjs",
 		"declaration": true,
 		"strict": true,
-		"outDir": "api"
+		"outDir": "api",
+		"sourceMap": true,
+		"declarationMap": true
 	},
-	"include": [
-		"src/**/*.ts",
-		"src/**/*.tsx"
-	],
+	"include": ["src/**/*.ts", "src/**/*.tsx"],
 	"exclude": []
 }

@@ -1,13 +1,14 @@
 {
 	"name": "@hediet/utils",
-	"version": "0.1.1",
+	"version": "0.1.2",
 	"description": "",
 	"scripts": {
 		"prepublish": "rmdir api /S /Q && tsc",
 		"dev": "tsc --watch"
 	},
 	"files": [
-		"./api/"
+		"api",
+		"src"
 	],
 	"author": "Henning Dieterichs",
 	"license": "MIT",
