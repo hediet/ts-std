@@ -1,9 +1,9 @@
 {
 	"name": "@hediet/std",
-	"version": "0.1.5",
+	"version": "0.1.6",
 	"description": "",
 	"scripts": {
-		"pub": "rimraf out && copyfiles package.json ./out/ && tsc && json -I -f ./out/package.json -e \"this.scripts.prepublish = undefined\" && yarn publish out",
+		"pub": "yarn version && rimraf out && copyfiles package.json ./out/ && tsc && json -I -f ./out/package.json -e \"this.scripts.prepublish = undefined\" && yarn publish out --non-interactive",
 		"prepublish": "echo 'use yarn pub' exit 1",
 		"dev": "tsc --watch"
 	},
