@@ -1,18 +1,23 @@
 {
-	"name": "@hediet/utils",
-	"version": "0.1.3",
+	"name": "@hediet/std",
+	"version": "0.1.5",
 	"description": "",
 	"scripts": {
-		"prepublish": "rmdir api /S /Q && tsc",
+		"pub": "rimraf out && copyfiles package.json ./out/ && tsc && json -I -f ./out/package.json -e \"this.scripts.prepublish = undefined\" && yarn publish out",
+		"prepublish": "echo 'use yarn pub' exit 1",
 		"dev": "tsc --watch"
 	},
 	"files": [
-		"api",
-		"src"
+		"*.js"
 	],
 	"author": "Henning Dieterichs",
 	"license": "MIT",
 	"dependencies": {},
+	"devDependencies": {
+		"copyfiles": "^2.1.0",
+		"json": "^9.0.6",
+		"rimraf": "^2.6.3"
+	},
 	"publishConfig": {
 		"access": "public",
 		"registry": "https://registry.npmjs.org/"
