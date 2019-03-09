@@ -4,14 +4,14 @@ export class Deferred<T> {
 	public readonly promise: Promise<T>;
 
 	constructor() {
-		let resolve: (value: T) => void;
-		let reject: (reason: string) => void;
+		let escapedResolve: (value: T) => void;
+		let escapedReject: (reason: string) => void;
 		this.promise = new Promise((resolve, reject) => {
-			resolve = resolve;
-			reject = reject;
+			escapedResolve = resolve;
+			escapedReject = reject;
 		});
-		this.setValue = resolve!;
-		this.reject = reject!;
+		this.setValue = escapedResolve!;
+		this.reject = escapedReject!;
 	}
 }
 
