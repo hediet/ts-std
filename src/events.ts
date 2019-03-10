@@ -5,13 +5,13 @@ export type EventHandler<TArgs, TSender> = (
 	args: TArgs
 ) => void;
 
-export interface IEvent<TArgs, TSender> {
-	sub(fn: EventHandler<TArgs, TSender>): Disposable;
-	one(fn: EventHandler<TArgs, TSender>): Disposable;
-}
+export abstract class EventSource<TArgs = void, TSender = unknown> {
+	public abstract sub(fn: EventHandler<TArgs, TSender>): Disposable;
+	public abstract one(fn: EventHandler<TArgs, TSender>): Disposable;
 
-export function waitOne<TArgs>(event: IEvent<unknown, TArgs>): Promise<TArgs> {
-	return new Promise(resolve => event.one(resolve));
+	public waitOne<TArgs>(event: EventSource<unknown, TArgs>): Promise<TArgs> {
+		return new Promise(resolve => event.one(resolve));
+	}
 }
 
 interface Subscription<TArgs, TSender> {
@@ -19,8 +19,10 @@ interface Subscription<TArgs, TSender> {
 	readonly isOnce: boolean;
 }
 
-export class EventEmitter<TArgs = void, TSender = unknown>
-	implements IEvent<TArgs, TSender> {
+export class EventEmitter<TArgs = void, TSender = unknown> extends EventSource<
+	TArgs,
+	TSender
+> {
 	private readonly subscriptions = new Set<Subscription<TArgs, TSender>>();
 
 	public sub(fn: EventHandler<TArgs, TSender>): Disposable {
@@ -41,7 +43,7 @@ export class EventEmitter<TArgs = void, TSender = unknown>
 		return Disposable.create(() => this.subscriptions.delete(sub));
 	}
 
-	public asEvent(): IEvent<TArgs, TSender> {
+	public asEvent(): EventSource<TArgs, TSender> {
 		return this;
 	}
 

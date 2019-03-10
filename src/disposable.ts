@@ -16,25 +16,38 @@ export interface Disposable {
 	dispose(): void;
 }
 
-export async function guaranteeDisposeAsync<T>(
-	callback: (items: Disposable[]) => Promise<T>
-): Promise<T> {
-	const items: Disposable[] = [];
-	try {
-		const result = await callback(items);
-		return result;
-	} finally {
-		dispose(items);
-	}
+function isPromise(obj: any): obj is Promise<unknown> {
+	return (
+		!!obj &&
+		(typeof obj === "object" || typeof obj === "function") &&
+		typeof (obj as any).then === "function"
+	);
 }
 
-export function guaranteeDispose<T>(callback: (items: Disposable[]) => T): T {
+export function disposeOnReturn<T>(
+	callback: (track: (...disposables: Disposable[]) => void) => T
+): T {
+	let wasPromise = false;
 	const items: Disposable[] = [];
 	try {
-		const result = callback(items);
+		const result = callback((...args) => items.push(...args));
+		if (isPromise(result)) {
+			wasPromise = true;
+
+			return (async function test() {
+				try {
+					return await result;
+				} finally {
+					dispose(items);
+				}
+			})() as any;
+		}
+
 		return result;
 	} finally {
-		dispose(items);
+		if (!wasPromise) {
+			dispose(items);
+		}
 	}
 }
 
