@@ -3,7 +3,7 @@
 	"version": "0.1.10",
 	"description": "",
 	"scripts": {
-		"pub": "yarn version && rimraf dist && copyfiles package.json ./dist/ && tsc && json -I -f ./dist/package.json -e \"this.scripts.prepublish = undefined\" && yarn publish dist --non-interactive",
+		"pub": "yarn version && rimraf dist && copyfiles package.json ./dist/ && tsc && json -I -f ./dist/package.json -e \"this.scripts.pub = this.scripts.prepublish = undefined;\" && yarn publish dist --non-interactive",
 		"prepublish": "echo 'use yarn pub' && exit 1",
 		"dev": "tsc --watch"
 	},
