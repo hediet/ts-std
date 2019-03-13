@@ -1,11 +1,11 @@
 export class Deferred<T> {
 	public readonly setValue: (value: T) => void;
-	public readonly reject: (reason: string) => void;
+	public readonly reject: (reason?: any) => void;
 	public readonly promise: Promise<T>;
 
 	constructor() {
 		let escapedResolve: (value: T) => void;
-		let escapedReject: (reason: string) => void;
+		let escapedReject: (reason?: any) => void;
 		this.promise = new Promise((resolve, reject) => {
 			escapedResolve = resolve;
 			escapedReject = reject;
@@ -17,7 +17,7 @@ export class Deferred<T> {
 
 export class Barrier<T> {
 	public readonly unlock: (value: T) => void;
-	public readonly reject: (reason: string) => void;
+	public readonly reject: (reason?: any) => void;
 	public readonly onUnlocked: Promise<T>;
 
 	constructor() {
