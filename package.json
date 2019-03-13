@@ -1,6 +1,6 @@
 {
 	"name": "@hediet/std",
-	"version": "0.1.10",
+	"version": "0.1.11",
 	"description": "",
 	"scripts": {
 		"pub": "yarn version && rimraf dist && copyfiles package.json ./dist/ && tsc && json -I -f ./dist/package.json -e \"this.scripts.pub = this.scripts.prepublish = undefined;\" && yarn publish dist --non-interactive",
