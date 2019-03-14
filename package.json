@@ -1,22 +1,35 @@
 {
 	"name": "@hediet/std",
-	"version": "0.1.11",
+	"version": "0.1.12",
 	"description": "",
 	"scripts": {
-		"pub": "yarn version && rimraf dist && copyfiles package.json ./dist/ && tsc && json -I -f ./dist/package.json -e \"this.scripts.pub = this.scripts.prepublish = undefined;\" && yarn publish dist --non-interactive",
+		"pub": "yarn version && rimraf dist && copyfiles package.json ./dist/src/ && tsc && json -I -f ./dist/src/package.json -e \"this.scripts.pub = this.scripts.prepublish = undefined;\" && yarn publish dist/src --non-interactive",
 		"prepublish": "echo 'use yarn pub' && exit 1",
-		"dev": "tsc --watch"
+		"dev": "tsc --watch",
+		"test": "mocha --require source-map-support/register dist/test/**/*.js"
 	},
 	"files": [
 		"*.*"
 	],
 	"author": "Henning Dieterichs",
 	"license": "MIT",
-	"dependencies": {},
+	"dependencies": {
+		"@types/chai": "^4.1.7",
+		"@types/sinon": "^7.0.10",
+		"chai": "^4.2.0",
+		"sinon": "^7.2.7"
+	},
 	"devDependencies": {
+		"@types/assert": "^1.4.2",
+		"@types/mocha": "^2.2.40",
 		"copyfiles": "^2.1.0",
+		"coveralls": "^2.13.1",
 		"json": "^9.0.6",
-		"rimraf": "^2.6.3"
+		"mocha": "^3.2.0",
+		"mocha-lcov-reporter": "^1.3.0",
+		"nyc": "^10.3.0",
+		"rimraf": "^2.6.3",
+		"source-map-support": "^0.5.0"
 	},
 	"publishConfig": {
 		"access": "public",
