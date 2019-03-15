@@ -1,7 +1,13 @@
-export class Deferred<T> {
-	public readonly setValue: (value: T) => void;
+export type DeferredState = "none" | "resolved" | "rejected";
+
+export class Deferred<T = void> {
+	public readonly resolve: (value: T) => void;
 	public readonly reject: (reason?: any) => void;
 	public readonly promise: Promise<T>;
+	private _state: DeferredState = "none";
+	public get state(): DeferredState {
+		return this._state;
+	}
 
 	constructor() {
 		let escapedResolve: (value: T) => void;
@@ -10,21 +16,25 @@ export class Deferred<T> {
 			escapedResolve = resolve;
 			escapedReject = reject;
 		});
-		this.setValue = escapedResolve!;
-		this.reject = escapedReject!;
+		this.resolve = val => {
+			this._state = "resolved";
+			escapedResolve(val);
+		};
+		this.reject = reason => {
+			this._state = "rejected";
+			escapedReject(reason);
+		};
 	}
 }
 
-export class Barrier<T> {
-	public readonly unlock: (value: T) => void;
-	public readonly reject: (reason?: any) => void;
-	public readonly onUnlocked: Promise<T>;
+export class Barrier<T = void> {
+	private readonly deferred = new Deferred<T>();
 
-	constructor() {
-		const d = new Deferred<T>();
-		this.onUnlocked = d.promise;
-		this.unlock = d.setValue;
-		this.reject = d.reject;
+	public readonly unlock = this.deferred.resolve;
+	public readonly reject = this.deferred.reject;
+	public readonly onUnlocked = this.deferred.promise;
+	public get state(): DeferredState {
+		return this.deferred.state;
 	}
 }
 
@@ -42,7 +52,7 @@ export class ProducerConsumer<T> {
 	}
 
 	public produce(value: T) {
-		this.popOrNext().setValue(value);
+		this.popOrNext().resolve(value);
 	}
 
 	public rejectSingle(reason: string) {

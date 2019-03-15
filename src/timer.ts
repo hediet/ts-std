@@ -1,11 +1,7 @@
 //import { CancellationToken, CancellationError } from './cancellation';
-import {
-	Disposable,
-	DisposableComponent,
-	DisposableLike,
-	dispose,
-} from "./disposable";
+import { Disposable, DisposableComponent } from "./disposable";
 import { EventEmitter } from "./events";
+import { Barrier } from "./synchronization";
 
 export function startIntervalCallImmediately(
 	intervalMs: number,
@@ -41,6 +37,31 @@ export class EventTimer extends DisposableComponent {
 		this.addDisposable(
 			startInterval(intervalMs, () => this.emitter.emit(undefined, this))
 		);
+	}
+}
+
+export class ResettableTimeout {
+	private source = new Barrier();
+	public readonly onTimeout = this.source.onUnlocked;
+	public get timedOut(): boolean {
+		return this.source.state !== "none";
+	}
+	private timeout: Disposable | undefined;
+
+	constructor(private readonly timeoutMs: number) {
+		this.startOrRestartTimeout(timeoutMs);
+	}
+
+	private startOrRestartTimeout(timeoutMs: number) {
+		if (this.timeout) {
+			this.timeout.dispose();
+			this.timeout = undefined;
+		}
+		this.timeout = startTimeout(timeoutMs, () => this.source.unlock());
+	}
+
+	public reset(newTimeoutMs?: number): void {
+		this.startOrRestartTimeout(newTimeoutMs || this.timeoutMs);
 	}
 }
 
