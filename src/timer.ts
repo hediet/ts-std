@@ -1,5 +1,5 @@
 //import { CancellationToken, CancellationError } from './cancellation';
-import { Disposable, DisposableComponent } from "./disposable";
+import { Disposable } from "./disposable";
 import { EventEmitter } from "./events";
 import { Barrier } from "./synchronization";
 
@@ -28,15 +28,59 @@ export function startTimeout(
 	return Disposable.create(() => clearTimeout(handle));
 }
 
-export class EventTimer extends DisposableComponent {
-	protected emitter = new EventEmitter();
-	public readonly onTick = this.emitter.asEvent();
+export type EventTimerState = "started" | "stopped";
 
-	constructor(intervalMs: number) {
-		super();
-		this.addDisposable(
-			startInterval(intervalMs, () => this.emitter.emit(undefined, this))
-		);
+export class EventTimer {
+	protected emitter = new EventEmitter<undefined, EventTimer>();
+	public readonly onTick = this.emitter.asEvent();
+	private activeInterval: Disposable | undefined;
+
+	public get state(): EventTimerState {
+		if (this.activeInterval) {
+			return "started";
+		} else {
+			return "stopped";
+		}
+	}
+
+	constructor(
+		private readonly intervalMs: number,
+		initialState: EventTimerState
+	) {
+		if (initialState === "started") {
+			this.start();
+		}
+	}
+
+	public startImmediate(): boolean {
+		if (this.start()) {
+			this.emitter.emit(undefined, this);
+			return true;
+		}
+		return false;
+	}
+
+	public start(): boolean {
+		if (!this.activeInterval) {
+			this.activeInterval = startInterval(this.intervalMs, () =>
+				this.emitter.emit(undefined, this)
+			);
+			return true;
+		}
+		return false;
+	}
+
+	public stop(): boolean {
+		if (this.activeInterval) {
+			this.activeInterval.dispose();
+			this.activeInterval = undefined;
+			return true;
+		}
+		return false;
+	}
+
+	public dispose() {
+		stop();
 	}
 }
 
