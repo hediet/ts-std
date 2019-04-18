@@ -1,16 +1,16 @@
 import { Disposable } from "./disposable";
 
 export type EventHandler<TArgs, TSender> = (
-	sender: TSender,
-	args: TArgs
+	args: TArgs,
+	sender: TSender
 ) => void;
 
-export abstract class EventSource<TArgs = void, TSender = unknown> {
+export abstract class EventSource<TArgs = void, TSender = void> {
 	public abstract sub(fn: EventHandler<TArgs, TSender>): Disposable;
 	public abstract one(fn: EventHandler<TArgs, TSender>): Disposable;
 
-	public waitOne<TArgs>(event: EventSource<unknown, TArgs>): Promise<TArgs> {
-		return new Promise(resolve => event.one(resolve));
+	public waitOne(): Promise<TArgs> {
+		return new Promise(resolve => this.one(resolve));
 	}
 }
 
@@ -19,7 +19,7 @@ interface Subscription<TArgs, TSender> {
 	readonly isOnce: boolean;
 }
 
-export class EventEmitter<TArgs = void, TSender = unknown> extends EventSource<
+export class EventEmitter<TArgs = void, TSender = void> extends EventSource<
 	TArgs,
 	TSender
 > {
@@ -49,8 +49,10 @@ export class EventEmitter<TArgs = void, TSender = unknown> extends EventSource<
 
 	public emit(args: TArgs, sender: TSender) {
 		for (const sub of this.subscriptions.values()) {
-			if (sub.isOnce) this.subscriptions.delete(sub);
-			sub.handler(sender, args);
+			if (sub.isOnce) {
+				this.subscriptions.delete(sub);
+			}
+			sub.handler(args, sender);
 		}
 	}
 }
