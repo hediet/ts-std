@@ -1,7 +1,17 @@
+/**
+ * Represents a type which can release resources, such
+ * as event listening or a timer.
+ */
 export interface Disposable {
+	/**
+	 * Dispose this object.
+	 */
 	dispose(): void;
 }
 
+/**
+ * Represents a type which is like a `Disposable`.
+ */
 export type DisposableLike =
 	| Disposable
 	| ReadonlyArray<Disposable>
@@ -141,4 +151,24 @@ function isPromise(obj: any): obj is Promise<unknown> {
 		(typeof obj === "object" || typeof obj === "function") &&
 		typeof (obj as any).then === "function"
 	);
+}
+
+export function addAndDeleteOnDispose<T>(set: Set<T>, item: T): Disposable;
+export function addAndDeleteOnDispose<TKey, TValue>(
+	set: Map<TKey, TValue>,
+	key: TKey,
+	item: TValue
+): Disposable;
+export function addAndDeleteOnDispose(
+	set: Set<any> | Map<any, any>,
+	keyOrItem: any,
+	item?: any
+): Disposable {
+	if (set instanceof Set) {
+		set.add(keyOrItem);
+		return Disposable.create(() => set.delete(keyOrItem));
+	} else {
+		set.set(keyOrItem, item);
+		return Disposable.create(() => set.delete(keyOrItem));
+	}
 }

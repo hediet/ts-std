@@ -1,14 +1,28 @@
 import { Disposable } from "./disposable";
 
+/**
+ * The event handler function type.
+ */
 export type EventHandler<TArgs, TSender> = (
 	args: TArgs,
 	sender: TSender
 ) => void;
 
 export abstract class EventSource<TArgs = void, TSender = void> {
+	/**
+	 * Subscribes to this event. `fn` is called whenever an event is emitted by this source.
+	 * The subscription can be revoked by disposing the returned value.
+	 */
 	public abstract sub(fn: EventHandler<TArgs, TSender>): Disposable;
+	/**
+	 * Subscribes to this event. `fn` is called the first time an event is emitted by this source.
+	 * The subscription can be revoked by disposing the returned value.
+	 */
 	public abstract one(fn: EventHandler<TArgs, TSender>): Disposable;
 
+	/**
+	 * Waits for a single event.
+	 */
 	public waitOne(): Promise<TArgs> {
 		return new Promise(resolve => this.one(resolve));
 	}
