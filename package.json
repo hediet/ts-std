@@ -1,11 +1,12 @@
 {
 	"name": "@hediet/std",
-	"version": "0.4.0",
+	"version": "0.5.0",
 	"description": "",
 	"scripts": {
 		"pub": "yarn version && rimraf dist && copyfiles package.json ./dist/src/ && tsc && json -I -f ./dist/src/package.json -e \"this.scripts.pub = this.scripts.prepublish = undefined;\" && yarn publish dist/src --non-interactive",
 		"prepublish": "echo 'use yarn pub' && exit 1",
 		"dev": "tsc --watch",
+		"build": "tsc",
 		"test": "mocha --require source-map-support/register dist/test/**/*.js"
 	},
 	"files": [
