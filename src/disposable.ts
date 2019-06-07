@@ -4,7 +4,7 @@
  */
 export interface Disposable {
 	/**
-	 * Dispose this object.
+	 * Disposes this object.
 	 */
 	dispose(): void;
 }
@@ -43,6 +43,32 @@ export namespace Disposable {
 		if (disposable instanceof Set) return [...disposable];
 		else return disposable;
 	}
+
+	export function fn(
+		callback?: (track: TrackFunction, untrack: TrackFunction) => void
+	): { (): void } & Disposer {
+		const d = new Disposer();
+		if (callback) {
+			callback(
+				disposable => d.track(disposable),
+				disposable => d.untrack(disposable)
+			);
+		}
+
+		function dispose() {
+			d.dispose();
+		}
+		dispose.track = d.track.bind(d);
+		dispose.untrack = d.untrack.bind(d);
+		dispose.dispose = d.dispose;
+		Object.defineProperty(dispose, "disposed", {
+			get() {
+				return d.disposed;
+			},
+		});
+
+		return dispose as any;
+	}
 }
 
 class ArrayDisposer implements Disposable {
@@ -72,37 +98,30 @@ export function dispose(disposable: DisposableLike) {
 
 export type TrackFunction = <T extends DisposableLike>(disposable: T) => T;
 
-export class DisposableComponent implements Disposable {
+class Disposer implements Disposable {
 	private disposables = new Set<Disposable>();
 
-	constructor(
-		callback?: (track: TrackFunction, untrack: TrackFunction) => void
-	) {
-		if (callback) {
-			callback(
-				disposable => this.trackDisposable(disposable),
-				disposable => this.untrackDisposable(disposable)
-			);
-		}
-	}
-
-	protected trackDisposable<T extends DisposableLike>(disposable: T): T {
+	public track<T extends DisposableLike>(disposable: T): T {
 		for (const d of Disposable.normalize(disposable)) {
 			this.disposables.add(d);
 		}
 		return disposable;
 	}
 
-	protected untrackDisposable<T extends DisposableLike>(disposable: T): T {
+	public untrack<T extends DisposableLike>(disposable: T): T {
 		for (const d of Disposable.normalize(disposable)) {
 			this.disposables.delete(d);
 		}
 		return disposable;
 	}
 
-	public dispose() {
+	public disposed = false;
+
+	public readonly dispose = () => {
+		this.disposed = true;
 		dispose(this.disposables);
-	}
+		this.disposables.clear();
+	};
 }
 
 export function disposeOnReturn<T>(
