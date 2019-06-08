@@ -98,7 +98,7 @@ export function dispose(disposable: DisposableLike) {
 
 export type TrackFunction = <T extends DisposableLike>(disposable: T) => T;
 
-class Disposer implements Disposable {
+export class Disposer implements Disposable {
 	private disposables = new Set<Disposable>();
 
 	public track<T extends DisposableLike>(disposable: T): T {
