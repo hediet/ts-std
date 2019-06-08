@@ -1,6 +1,6 @@
 {
 	"name": "@hediet/std",
-	"version": "0.5.0",
+	"version": "0.6.0",
 	"description": "",
 	"scripts": {
 		"pub": "yarn version && rimraf dist && copyfiles package.json ./dist/src/ && tsc && json -I -f ./dist/src/package.json -e \"this.scripts.pub = this.scripts.prepublish = undefined;\" && yarn publish dist/src --non-interactive",
@@ -18,6 +18,7 @@
 		"@types/chai": "^4.1.7",
 		"@types/sinon": "^7.0.10",
 		"chai": "^4.2.0",
+		"mobx": "^5.10.0",
 		"sinon": "^7.2.7"
 	},
 	"devDependencies": {
