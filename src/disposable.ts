@@ -69,6 +69,25 @@ export namespace Disposable {
 
 		return dispose as any;
 	}
+	
+	export function is(obj: unknown): obj is Disposable {
+		if (typeof obj !== 'object') {
+			return false;
+		}
+
+		if (!('dispose' in obj)) {
+			return false;
+		}
+
+		const d: Function | null = (obj as any).dispose;
+		if (typeof d !== 'function') {
+			return false;
+		}
+		if (d.length !== 0) {
+			return false;
+		}
+		return true;
+	}
 }
 
 class ArrayDisposer implements Disposable {
