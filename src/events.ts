@@ -51,7 +51,7 @@ export class EventEmitter<TArgs = void, TSender = void> extends EventSource<
 	public one(fn: EventHandler<TArgs, TSender>): Disposable {
 		const sub: Subscription<TArgs, TSender> = {
 			handler: fn,
-			isOnce: false,
+			isOnce: true,
 		};
 		this.subscriptions.add(sub);
 		return Disposable.create(() => this.subscriptions.delete(sub));
